@@ -1,12 +1,14 @@
 {
-  "name": "my-express-chat",
+  "name": "mostalt-simple-chat",
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "start": "NODE_ENV=development nodemon app.js"
   },
   "dependencies": {
+    "ejs": "*",
+    "ejs-locals": "^1.0.2",
     "express": "3.3.8",
-    "ejs": "*"
+    "mongodb": "^2.2.10"
   }
 }

@@ -28,17 +28,12 @@ if (app.get('env') == 'development') {
 app.use(express.bodyParser()); //req.body...
 //app.use(express.methodOverride());
 app.use(express.cookieParser()); //req.cookies
-
-app.use(require('./middleware/sendHttpError'));
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-
 //app.use(express.session());
+app.use(require('./middleware/sendHttpError'));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(app.router);
 
 var routes = require('./routes')(app);
-
 
 app.use(function(req, res, next) {
   if (req.url == '/') {
@@ -63,15 +58,16 @@ app.use(function(req, res) {
 
 app.use(function(err, req, res, next) {
 
-  if(typeof err == 'number') {
+  if (typeof err == 'number') {
     err = new HttpError(err);
   }
 
-  if(err instanceof HttpError) {
-    res.sendHttpError(err)
+  if (err instanceof HttpError) {
+    res.sendHttpError(err);
   } else {
+
     if (app.get('env') == 'development') {
-      express.errorHandler(err, req, res, next);
+      express.errorHandler()(err, req, res, next);
     } else {
       log.error(err);
       err = new HttpError(500);

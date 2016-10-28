@@ -6,10 +6,12 @@
     "start": "NODE_ENV=development nodemon app.js"
   },
   "dependencies": {
+    "async": "^2.1.2",
     "ejs": "*",
     "ejs-locals": "^1.0.2",
     "express": "3.3.8",
     "mongodb": "^2.2.10",
-    "mongoose": "^4.6.5"
+    "mongoose": "^4.6.5",
+    "pug": "^2.0.0-beta6"
   }
 }

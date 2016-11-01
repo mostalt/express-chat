@@ -6,3 +6,36 @@ block title
 block content
     h1 Chat
     h2 User: #{user.get('username')}
+
+    #room
+        ul
+        form
+            input(class="form-control" autocomplete="off" autofocus placehoder="Message...")
+
+
+block scripts    
+    script(src="/socket.io/socket.io.js")
+    script.
+        var socket = io();
+
+        var form = $('#room form');
+        var list = $('#room ul');
+
+
+        form.on('submit', function (e) {
+            e.preventDefault();
+            var input = $(this).find(':input');
+            var text = input.val();
+
+            input.val('');
+
+            socket.emit('message', text, function(data) {
+                $('<li>', {text: text}).appendTo(list);
+            });
+
+            return false;
+        });
+
+        socket.on('message', function(text) {
+            $('<li>', {text: text}).appendTo(list);
+        });

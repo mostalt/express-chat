@@ -9,5 +9,14 @@
                 }
             }
         }
+    },
+    "session": {
+        "secret": "KillerIsJim",
+        "key": "sid",
+        "coockie": {
+            "path": "/",
+            "httpOnly": true,
+            "maxAge": null
+        }
     }
 }

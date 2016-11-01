@@ -2,7 +2,10 @@ nav(class="navbar navbar-default" role="navigation")
     div(class="col-md-12")
         ul(class="nav navbar-nav")
             li
-                a(href="/") Главная
+                a(href="/") Home
         ul(class="nav navbar-nav navbar-right")
             li
-                a(href="") Войти
+                if user
+                    a(href="" onclick="$('body').append('<form id=submitme method=POST action=/logout></form>');$('#submitme').submit();return false") Log out
+                else
+                    a(href="/login") Log in

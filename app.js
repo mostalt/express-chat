@@ -8,6 +8,7 @@ var http = require('http');
 var path = require('path');
 var config = require('./config');
 var log = require('./libs/log')(module);
+var mongoose = require('./libs/mongoose');
 var HttpError = require('./error').HttpError;
 
 // all environments
@@ -28,38 +29,35 @@ if (app.get('env') == 'development') {
 app.use(express.bodyParser()); //req.body...
 //app.use(express.methodOverride());
 app.use(express.cookieParser()); //req.cookies
-//app.use(express.session());
+
+var MongoStore = require('connect-mongo')(express);
+
+app.use(express.session({
+  secret: config.get('session:secret'),
+  key: config.get('session:key'),
+  store: new MongoStore({
+    mongooseConnection: mongoose.connection
+  })
+}));
+
+//app.use(function(req, res, next) {
+  //req.session.numberOfVisits = req.session.numberOfVisits + 1 || 1;
+  //res.send('Visits: ' + req.session.numberOfVisits);
+//});
+
 app.use(require('./middleware/sendHttpError'));
-app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(require('./middleware/loadUser'));
+
 app.use(app.router);
+require('./routes')(app);
 
-var routes = require('./routes')(app);
-
-app.use(function(req, res, next) {
-  if (req.url == '/') {
-    res.end('Home');
-  } else {
-    next();
-  }
-});
-
-
-app.use(function(req, res, next) {
-  if (req.url == '/forbidden') {
-    next(new Error('Oops, denied'));
-  } else {
-    next();
-  }
-});
-
-app.use(function(req, res) {
-  res.send(404, 'Page not found, sry bro')
-});
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function(err, req, res, next) {
 
   if (typeof err == 'number') {
-    err = new HttpError(err);
+    err = new HttpError(err); //next(404);
   }
 
   if (err instanceof HttpError) {

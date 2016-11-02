@@ -16,26 +16,51 @@ block content
 block scripts    
     script(src="/socket.io/socket.io.js")
     script.
-        var socket = io();
+        var socket = io('', {
+            reconnectionDelay: 500,
+            reconnectionAttempts: 10,
+            reconnectionDelayMax: 3000
+        });
 
         var form = $('#room form');
         var list = $('#room ul');
+        var input = $('#room input')
 
+        socket
+            .on('message', function(message) {
+                printMessage(message)
+            })
+            .on('connect', function() {
+                printStatus('connection is established');
+                form.on('submit', sendMessage);
+                input.prop('disabled', false);
+            })
+            .on('disconnect', function() {
+                printStatus('connection is lost');
+                form.off('submit', sendMessage);
+                input.prop('disabled', true);
+            })
+            .on('reconnect_failed', function() {
+                alert('Server is dead');
+            })
 
-        form.on('submit', function (e) {
-            e.preventDefault();
-            var input = $(this).find(':input');
+        
+
+        function sendMessage() {
             var text = input.val();
 
-            input.val('');
-
-            socket.emit('message', text, function(data) {
-                $('<li>', {text: text}).appendTo(list);
+            socket.emit('message', text, function() {
+               printMessage(text);
             });
 
+            input.val('');
             return false;
-        });
+        }
 
-        socket.on('message', function(text) {
-            $('<li>', {text: text}).appendTo(list);
-        });
+        function printStatus(status) {
+            $('<li>').append($('<i>').text(status)).appendTo(list);
+        }
+
+        function printMessage(text) {
+            $('<li>').text(text).appendTo(list);
+        }

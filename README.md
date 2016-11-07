@@ -1,2 +1,2 @@
 # express-chat
-invistigation
+invistigation of Node.js

@@ -5,7 +5,7 @@ block title
 
 block content
     h1 Chat
-    h2 User: #{user.get('username')}
+    h3 User: #{user.get('username')}
 
     #room
         ul
@@ -23,7 +23,7 @@ block scripts
         });
 
         var form = $('#room form');
-        var list = $('#room ul');
+        var ul = $('#room ul');
         var input = $('#room input')
 
         socket
@@ -41,7 +41,7 @@ block scripts
                 input.prop('disabled', true);
             })
             .on('reconnect_failed', function() {
-                alert('Server is dead');
+                console.log('Server is dead');
             })
 
         
@@ -58,9 +58,9 @@ block scripts
         }
 
         function printStatus(status) {
-            $('<li>').append($('<i>').text(status)).appendTo(list);
+            $('<li>').append($('<i>').text(status)).appendTo(ul);
         }
 
         function printMessage(text) {
-            $('<li>').text(text).appendTo(list);
+            $('<li>').text(text).appendTo(ul);
         }

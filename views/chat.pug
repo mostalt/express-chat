@@ -27,8 +27,14 @@ block scripts
         var input = $('#room input')
 
         socket
-            .on('message', function(message) {
-                printMessage(message)
+            .on('message', function(username, message) {
+                printMessage(username + ' >' + message)
+            })
+            .on('leave', function(username) {
+                printStatus(username + ' left the chat');
+            })
+            .on('join', function(username) {
+                printStatus(username + ' join in chat');
             })
             .on('connect', function() {
                 printStatus('connection is established');

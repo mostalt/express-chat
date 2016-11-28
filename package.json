@@ -11,8 +11,10 @@
     "express": "3.3.8",
     "mongodb": "^2.2.10",
     "mongoose": "^4.6.5",
+    "nconf": "^0.8.4",
     "pug": "^2.0.0-beta6",
     "socket.io": "^1.5.1",
-    "socket.io-logger": "0.0.2"
+    "socket.io-logger": "0.0.2",
+    "winston": "^2.3.0"
   }
 }

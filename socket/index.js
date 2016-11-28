@@ -45,45 +45,24 @@ function loadUser(session, callback) {
 
 }
 
-// function loadSession(sid) {
-
-//   sessionStore.load(sid, function(err, session) {
-//     if (err) {
-//       return next(err);
-//     } else {
-//       return session;
-//     }
-
-//   });
-
-// }
-
-// function loadUser(session) {
-//   console.log(session.user);
-//   if (!session.user) {
-//     log.debug("Session %s is anonymous", session.id);
-//     next(new Error('not authorized'));
-//   }
-
-//   log.debug("retrieving user ", session.user);
-
-//   User.findById(session.user, function(err, user) {
-//     if (err) return next(err);
-
-//     if (!user) {
-//       return next(new HttpError(403, "Anonymous session may not connect"));
-//     }
-    
-//     log.debug("user findbyId result: " + user);
-
-//     return user;
-//   });
-
-// }
-
 module.exports = function(server) {
     var io = require('socket.io')(server);
+    var secret = config.get('session:secret');
+    var sessionKey = config.get('session:key');
+
     io.set('origins', 'localhost:*');
+
+    var disconnectRoom = function (name) {
+        name = '/' + name;
+
+        var users = io.manager.rooms[name];
+
+        for (var i = 0; i < users.length; i++) {
+            io.sockets.socket(users[i]).disconnect();
+        }
+
+        return this;
+    };
 
     io.use(function(socket, next) {
 
@@ -91,84 +70,70 @@ module.exports = function(server) {
 
         async.waterfall([
             function(callback) {
-                // handshakeData.cookies - объект с cookie
-                handshakeData.cookies = cookie.parse(handshakeData.headers.cookie || '');
-                var sidCookie = handshakeData.cookies[config.get('session:key')];
-                var sid = cookieParser.signedCookie(sidCookie, config.get('session:secret'));
-                loadSession(sid, callback);
+                //get sid
+                var parser = cookieParser(secret);
+                parser(handshakeData, {}, function (err) {
+                    if (err) return callback(err);
+
+                    var sid = handshakeData.signedCookies[sessionKey];
+
+                    loadSession(sid, callback);
+                });
             },
             function(session, callback) {
                 if (!session) {
-                    callback(new HttpError(401, "No session"));
+                    return callback(new HttpError(401, "No session"));
                 }
-                handshakeData.session = session;
+                socket.handshake.session = session;
                 loadUser(session, callback);
             },
             function(user, callback) {
                 if (!user) {
-                    callback(new HttpError(403, "Anonymous session may not connect"));
+                    return callback(new HttpError(403, "Anonymous session may not connect"));
                 }
-                handshakeData.user = user;
-                next();
+                
+                callback(null, user);
             }   
 
-        ], function(err) {
-            if (!err) {
-                return  callback(null, true);
+        ], function(err, user) {
+            if (err) {
+
+                if (err instanceof HttpError) {
+                    return next(new Error('not authorized'));
+                }
+
+                next(err);
                 
             }
 
-            if (err instanceof HttpError) {
-                return callback(null, false);
-            }
 
-            callback(err);
+            socket.handshake.user = user;
+            next();
+
+
         });
 
     });
 
-    // io.use( function(socket, next) {
-    //     var handshakeData = socket.handshake;
-    //     handshakeData.cookies = cookie.parse(handshakeData.headers.cookie || '');
-    //     var sidCookie = handshakeData.cookies[config.get('session:key')];
-    //     var sid = cookieParser.signedCookie(sidCookie, config.get('session:secret'));
-
-    //     loadSession(sid);
-    //     console.log(session);
-
-    //     if (!session) {
-    //       next(new HttpError(401, "No session"));
-    //     }
-
-    //     handshakeData.session = session;
-    //     loadUser(session);
-
-    //     if (!user) {
-    //       next(new HttpError(403, "Anonymous session may not connect"));
-    //     }
-
-    //     handshakeData.user = user;
-    //     next();
-
-    // });
-
     io.on('connection', function(socket) {
 
         var username = socket.handshake.user.username || 'nothing';
+        var userRoom = "user: " + username;
 
-        console.log('User:' + username + ' connected');
+        socket.join(userRoom);
 
-        //console.log(socket.handshake);
+        console.log('User: ' + username + ' connected');
+
+        socket.broadcast.emit('join', username);
+
         socket.on('message', function(text, callback) {
             socket.broadcast.emit('message', username, text);
-            callback();
+            callback && callback();
         });
 
         socket.on('disconnect', function() {
             socket.broadcast.emit('leave', username);
         });
-
-        socket.broadcast.emit('join', username);
 
     });
 

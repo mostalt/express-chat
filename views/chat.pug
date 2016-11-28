@@ -28,7 +28,7 @@ block scripts
 
         socket
             .on('message', function(username, message) {
-                printMessage(username + ' >' + message)
+                printMessage(username + '> ' + message)
             })
             .on('leave', function(username) {
                 printStatus(username + ' left the chat');
@@ -45,6 +45,19 @@ block scripts
                 printStatus('connection is lost');
                 form.off('submit', sendMessage);
                 input.prop('disabled', true);
+                this.$emit('error');
+            })
+            .on('logout', function() {
+                window.location.href = '/';
+            })
+            .on('error', function(reason) {
+                if (reason == 'handshake unauthorized') {
+                    printStatus('you are out of chat');
+                } else {
+                    setTimeout(function() {
+                        socket.socket.connect();
+                    }, 500);
+                }
             })
             .on('reconnect_failed', function() {
                 console.log('Server is dead');
@@ -56,7 +69,7 @@ block scripts
             var text = input.val();
 
             socket.emit('message', text, function() {
-               printMessage(text);
+               printMessage('me> ' + text);
             });
 
             input.val('');

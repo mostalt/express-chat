@@ -30,14 +30,12 @@ app.use(express.bodyParser()); //req.body...
 //app.use(express.methodOverride());
 app.use(express.cookieParser()); //req.cookies
 
-var MongoStore = require('connect-mongo')(express);
+var sessionStore = require('./libs/sessionStore');
 
 app.use(express.session({
   secret: config.get('session:secret'),
   key: config.get('session:key'),
-  store: new MongoStore({
-    mongooseConnection: mongoose.connection
-  })
+  store: sessionStore
 }));
 
 //app.use(function(req, res, next) {

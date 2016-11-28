@@ -5,7 +5,7 @@ block title
 
 block content
     h1 Chat
-    h2 User: #{user.get('username')}
+    h3 User: #{user.get('username')}
 
     #room
         ul
@@ -23,12 +23,18 @@ block scripts
         });
 
         var form = $('#room form');
-        var list = $('#room ul');
+        var ul = $('#room ul');
         var input = $('#room input')
 
         socket
-            .on('message', function(message) {
-                printMessage(message)
+            .on('message', function(username, message) {
+                printMessage(username + ' >' + message)
+            })
+            .on('leave', function(username) {
+                printStatus(username + ' left the chat');
+            })
+            .on('join', function(username) {
+                printStatus(username + ' join in chat');
             })
             .on('connect', function() {
                 printStatus('connection is established');
@@ -41,7 +47,7 @@ block scripts
                 input.prop('disabled', true);
             })
             .on('reconnect_failed', function() {
-                alert('Server is dead');
+                console.log('Server is dead');
             })
 
         
@@ -58,9 +64,9 @@ block scripts
         }
 
         function printStatus(status) {
-            $('<li>').append($('<i>').text(status)).appendTo(list);
+            $('<li>').append($('<i>').text(status)).appendTo(ul);
         }
 
         function printMessage(text) {
-            $('<li>').text(text).appendTo(list);
+            $('<li>').text(text).appendTo(ul);
         }
